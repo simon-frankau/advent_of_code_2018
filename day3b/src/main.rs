@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::collections::HashSet;
 use std::io;
 use std::io::BufRead;
 
@@ -36,21 +37,33 @@ fn read_rect(str: &str) -> Rect {
 // Representation of edges at a point. Stored left and right edge ids.
 #[derive(Debug)]
 struct Edge {
-    end_ids: Vec<i32>,
-    start_ids: Vec<i32>,
+    end_ids: HashSet<i32>,
+    start_ids: HashSet<i32>,
 }
 
 impl Edge {
     fn new() -> Edge {
-        Edge { end_ids: Vec::new(), start_ids: Vec::new() }
+        Edge { end_ids: HashSet::new(), start_ids: HashSet::new() }
     }
 
-    fn open(&mut self, id: i32) -> () {
-        self.start_ids.push(id);
+    fn add_left(&mut self, id: i32) -> () {
+        self.start_ids.insert(id);
     }
 
-    fn close(&mut self, id: i32) -> () {
-        self.end_ids.push(id);
+    fn add_right(&mut self, id: i32) -> () {
+        self.end_ids.insert(id);
+    }
+
+    fn remove_left(&mut self, id: i32) -> () {
+        self.start_ids.remove(&id);
+    }
+
+    fn remove_right(&mut self, id: i32) -> () {
+        self.end_ids.remove(&id);
+    }
+
+    fn is_empty(&self) -> bool {
+        self.end_ids.is_empty() && self.start_ids.is_empty()
     }
 }
 
@@ -102,27 +115,37 @@ fn main() {
         last_y = *y;
         // Now update our current x_deltas.
         for (x, x_id, lr, tb) in y_delta.iter() {
-            let updated_value = {
-                let x_entry = x_deltas.entry(*x).or_insert(0);
-                *x_entry += (if *lr == LR::Left { 1 } else { -1 }) * (if *tb == TB::Top { 1 } else { -1 });
-                *x_entry
+            let to_remove = {
+                let x_entry = x_deltas.entry(*x).or_insert(Edge::new());
+                match (lr, tb) {
+                    (LR::Left, TB::Top) => (*x_entry).add_left(*x_id),
+                    (LR::Right, TB::Top) => (*x_entry).add_right(*x_id),
+                    (LR::Left, TB::Bottom) => (*x_entry).remove_left(*x_id),
+                    (LR::Right, TB::Bottom) => (*x_entry).remove_right(*x_id),
+                }
+                (*x_entry).is_empty()
             };
-            if updated_value == 0 {
+            if to_remove {
                 x_deltas.remove(x);
             }
         }
         // And calculate our current accumulating extent.
         last_extent = 0;
         let mut last_x = 0;
-        let mut overlap_count = 0;
+        let mut inside = HashSet::new();
         for (x, x_delta) in x_deltas.iter() {
             // Accumulate extent since last x_delta, update x.
-            if overlap_count > 1 {
+            if inside.len() > 1 {
                 last_extent += *x - last_x;
             }
             last_x = *x;
-            // Update current overlap.
-            overlap_count += x_delta;
+            // Update current overlaps.
+            for end in x_delta.end_ids.iter() {
+                inside.remove(end);
+            }
+            for start in x_delta.start_ids.iter() {
+                inside.insert(start);
+            }
         }
     }
     println!("Area: {}", area);
