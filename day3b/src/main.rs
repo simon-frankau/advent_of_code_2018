@@ -102,6 +102,9 @@ fn main() {
         }
     }
 
+    // Build the set of rectangle ids.
+    let mut rect_ids = rects.iter().map(|r| r.id).collect::<HashSet<_>>();
+
     // Now, let's step through the ordered y changes, updating and
     // processing the x extents and using that to calculate accumulated
     // area.
@@ -146,7 +149,16 @@ fn main() {
             for start in x_delta.start_ids.iter() {
                 inside.insert(start);
             }
+            // And chuck out rectangles that overlap.
+            if inside.len() > 1 {
+                for id in inside.iter() {
+                    rect_ids.remove(id);
+                }
+            }
         }
     }
     println!("Area: {}", area);
+    for rect_id in rect_ids.iter() {
+        println!("Doesn't overlap: {}", rect_id);
+    }
 }
