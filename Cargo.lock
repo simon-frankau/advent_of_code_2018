@@ -1,0 +1,28 @@
+[[package]]
+name = "day1a"
+version = "0.1.0"
+
+[[package]]
+name = "day1b"
+version = "0.1.0"
+
+[[package]]
+name = "day2a"
+version = "0.1.0"
+
+[[package]]
+name = "day2b"
+version = "0.1.0"
+
+[[package]]
+name = "day3a"
+version = "0.1.0"
+
+[[package]]
+name = "day3b"
+version = "0.1.0"
+
+[[package]]
+name = "day4a"
+version = "0.1.0"
+
