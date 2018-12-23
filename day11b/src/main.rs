@@ -44,13 +44,14 @@ fn build_sum_grid(grid: &Vec<Vec<i32>>) -> Vec<Vec<i32>> {
 }
 
 fn get_score(grid: &Vec<Vec<i32>>, x: usize, y: usize, size: usize) -> i32 {
-    grid[y + size][x + size] - grid[y][x + size] - grid[y + size][x] + grid[y][x]
+    let score = grid[y + size][x + size] - grid[y][x + size] - grid[y + size][x] + grid[y][x];
+    // println!("Scoring {} {} {} -> {}", x, y, size, score);
+    score
 }
 
 fn main() {
     const WIDTH: usize = 300;
     const HEIGHT: usize = 300;
-    const SIZE: usize = 3;
 
     // Build powers.
     let mut grid = Vec::new();
@@ -67,17 +68,22 @@ fn main() {
     // Find highest power
     let mut best_x = 0;
     let mut best_y = 0;
+    let mut best_size = 0;
     let mut best_score = -1000000;
-    for y in 0..HEIGHT - SIZE + 1 {
-        for x in 0..WIDTH - SIZE + 1 {
-            let score = get_score(&sum_grid, x, y, 3);
-            if score > best_score {
-                best_score = score;
-                best_x = x;
-                best_y = y;
+    for y in 0..HEIGHT {
+        for x in 0..WIDTH {
+            let biggest_square = std::cmp::min(HEIGHT - y, WIDTH - x);
+            for size in 1..biggest_square {
+                let score = get_score(&sum_grid, x, y, size);
+                if score > best_score {
+                    best_score = score;
+                    best_x = x;
+                    best_y = y;
+                    best_size = size;
+                }
             }
         }
     }
 
-    println!("{},{}", best_x + 1, best_y + 1);
+    println!("{},{},{}", best_x + 1, best_y + 1, best_size);
 }
