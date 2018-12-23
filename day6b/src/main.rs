@@ -2,14 +2,15 @@ use std::io;
 use std::io::BufRead;
 
 fn pair_parse(str: &str) -> (i32, i32) {
-  let mut bits = str.split(',').map(|s| s.trim().parse().unwrap());
-  let x = bits.next().unwrap();
-  let y = bits.next().unwrap();
-  (x, y)
+    let mut bits = str.split(',').map(|s| s.trim().parse().unwrap());
+    let x = bits.next().unwrap();
+    let y = bits.next().unwrap();
+    (x, y)
 }
 
 fn sum_distance(points: &[(i32, i32)], x: i32, y: i32) -> i32 {
-    points.iter()
+    points
+        .iter()
         .map(|(px, py)| (x - px).abs() + (y - py).abs())
         .fold(0, |x, y| x + y)
 }
@@ -46,8 +47,8 @@ fn main() {
     let min_y = min_y - extra;
     let max_y = max_y + extra;
 
-    for x in min_x..max_x+1 {
-        for y in min_y..max_y+1 {
+    for x in min_x..max_x + 1 {
+        for y in min_y..max_y + 1 {
             if sum_distance(&coords, x, y) < 10000 {
                 near_count += 1;
             }

@@ -3,16 +3,17 @@ use std::io;
 use std::io::BufRead;
 
 fn pair_parse(str: &str) -> (i32, i32) {
-  let mut bits = str.split(',').map(|s| s.trim().parse().unwrap());
-  let x = bits.next().unwrap();
-  let y = bits.next().unwrap();
-  (x, y)
+    let mut bits = str.split(',').map(|s| s.trim().parse().unwrap());
+    let x = bits.next().unwrap();
+    let y = bits.next().unwrap();
+    (x, y)
 }
 
 fn no_draw_min<I, T, U>(mut iter: I) -> Option<U>
-    where
-    I: Iterator<Item=(T,U)>,
-    T: std::cmp::PartialOrd {
+where
+    I: Iterator<Item = (T, U)>,
+    T: std::cmp::PartialOrd,
+{
     let mut val = iter.next().unwrap();
     let mut is_draw = false;
     loop {
@@ -25,21 +26,24 @@ fn no_draw_min<I, T, U>(mut iter: I) -> Option<U>
                 }
             }
             Some(x) => {
-               if x.0 == val.0 {
-                   is_draw = true;
-               }
-               if x.0 < val.0 {
-                   is_draw = false;
-                   val = x;
-               }
+                if x.0 == val.0 {
+                    is_draw = true;
+                }
+                if x.0 < val.0 {
+                    is_draw = false;
+                    val = x;
+                }
             }
         }
     }
 }
 
 fn find_nearest(points: &[(i32, i32)], x: i32, y: i32) -> Option<(i32, i32)> {
-    no_draw_min(points.iter()
-        .map(|(px, py)| ((x - px).abs() + (y - py).abs(), (*px, *py))))
+    no_draw_min(
+        points
+            .iter()
+            .map(|(px, py)| ((x - px).abs() + (y - py).abs(), (*px, *py))),
+    )
 }
 
 fn main() {
@@ -62,8 +66,8 @@ fn main() {
     // alternatives. We'll keep count of nearest points for all
     // coordinates.
     let mut counts = HashMap::new();
-    for x in min_x..max_x+1 {
-        for y in min_y..max_y+1 {
+    for x in min_x..max_x + 1 {
+        for y in min_y..max_y + 1 {
             let nearest = find_nearest(&coords, x, y);
             *(counts.entry(nearest).or_insert(0)) += 1;
         }
@@ -72,11 +76,11 @@ fn main() {
     // Now, let's remove all the points that have infinite area. Any
     // point around the edge can be extrapolated to a line to infinity,
     // so let's just remove all points that occur around the edge.
-    for x in min_x..max_x+1 {
+    for x in min_x..max_x + 1 {
         counts.remove(&find_nearest(&coords, x, min_y));
         counts.remove(&find_nearest(&coords, x, max_y));
     }
-    for y in min_y..max_y+1 {
+    for y in min_y..max_y + 1 {
         counts.remove(&find_nearest(&coords, min_x, y));
         counts.remove(&find_nearest(&coords, max_x, y));
     }
