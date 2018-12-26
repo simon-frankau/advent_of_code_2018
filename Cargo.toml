@@ -23,4 +23,5 @@ members = [
     "day11b",
     "day12a",
     "day12b",
+    "day13a",
 ]
