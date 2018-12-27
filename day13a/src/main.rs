@@ -28,39 +28,59 @@ fn extract_trains(grid: &mut Vec<Vec<char>>) -> Vec<Train> {
     let mut trains = Vec::new();
     for (row, y) in grid.iter().zip(0..) {
         for (c, x) in row.iter().zip(0..) {
-             match c {
-                 ' ' => {}
-                 '-' => {}
-                 '|' => {}
-                 '+' => {}
-                 '/' => {}
-                 '\\' => {}
-                 'v' => {
-                     trains.push(Train { y: y, x: x, facing: Facing::Down, step: TURN_LEFT_NEXT});
-                 }
-                 '^' => {
-                     trains.push(Train { y: y, x: x, facing: Facing::Up, step: TURN_LEFT_NEXT});
-                 }
-                 '<' => {
-                     trains.push(Train { y: y, x: x, facing: Facing::Left, step: TURN_LEFT_NEXT});
-                 }
-                 '>' => {
-                     trains.push(Train { y: y, x: x, facing: Facing::Right, step: TURN_LEFT_NEXT});
-                 }
-                 _ => {
-                     panic!("Unexpected input: {}", c);
-                 }
-             }
+            match c {
+                ' ' => {}
+                '-' => {}
+                '|' => {}
+                '+' => {}
+                '/' => {}
+                '\\' => {}
+                'v' => {
+                    trains.push(Train {
+                        y: y,
+                        x: x,
+                        facing: Facing::Down,
+                        step: TURN_LEFT_NEXT,
+                    });
+                }
+                '^' => {
+                    trains.push(Train {
+                        y: y,
+                        x: x,
+                        facing: Facing::Up,
+                        step: TURN_LEFT_NEXT,
+                    });
+                }
+                '<' => {
+                    trains.push(Train {
+                        y: y,
+                        x: x,
+                        facing: Facing::Left,
+                        step: TURN_LEFT_NEXT,
+                    });
+                }
+                '>' => {
+                    trains.push(Train {
+                        y: y,
+                        x: x,
+                        facing: Facing::Right,
+                        step: TURN_LEFT_NEXT,
+                    });
+                }
+                _ => {
+                    panic!("Unexpected input: {}", c);
+                }
+            }
         }
     }
 
     // Remove all the trains from the grid to simplify processing...
     for train in trains.iter() {
         let replacement = match train.facing {
-             Facing::Right => '-',
-             Facing::Down => '|',
-             Facing::Left => '-',
-             Facing::Up => '|',
+            Facing::Right => '-',
+            Facing::Down => '|',
+            Facing::Left => '-',
+            Facing::Up => '|',
         };
         grid[train.y][train.x] = replacement;
     }
@@ -89,7 +109,7 @@ fn new_facing(facing: Facing, step: i32) -> Facing {
         (TURN_RIGHT_NEXT, Facing::Left) => Facing::Up,
         (TURN_RIGHT_NEXT, Facing::Up) => Facing::Right,
         (_, _) => panic!("Nope, shouldn't happen"),
-     }
+    }
 }
 
 fn step_trains(grid: &Vec<Vec<char>>, trains: &mut Vec<Train>) -> Result<(), String> {
@@ -103,10 +123,10 @@ fn step_trains(grid: &Vec<Vec<char>>, trains: &mut Vec<Train>) -> Result<(), Str
             let mut x = train.x;
             let mut y = train.y;
             match train.facing {
-                 Facing::Right => x += 1,
-                 Facing::Down => y += 1,
-                 Facing::Left => x -= 1,
-                 Facing::Up => y -= 1,
+                Facing::Right => x += 1,
+                Facing::Down => y += 1,
+                Facing::Left => x -= 1,
+                Facing::Up => y -= 1,
             }
             if locs.contains(&(x, y)) {
                 return Err(format!("Train collision at {}, {}", x, y));
@@ -140,7 +160,7 @@ fn step_trains(grid: &Vec<Vec<char>>, trains: &mut Vec<Train>) -> Result<(), Str
             (c, _) => {
                 panic!("Unexpected state: {:?} on {}", train, c);
             }
-         }
+        }
     }
 
     Ok(())
