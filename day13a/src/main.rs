@@ -77,14 +77,19 @@ fn print_track(grid: &Vec<Vec<char>>) {
     }
 }
 
-fn check_collisions(trains: &Vec<Train>, x: usize, y: usize) -> Result<(), String> {
-    // This is inefficient, but I think it's ok for a small number of trains.
-    for train in trains.iter() {
-        if train.x == x && train.y == y {
-
-        }
-    }
-    Ok(())
+fn new_facing(facing: Facing, step: i32) -> Facing {
+    match (step, facing) {
+        (TURN_LEFT_NEXT, Facing::Right) => Facing::Up,
+        (TURN_LEFT_NEXT, Facing::Down) => Facing::Right,
+        (TURN_LEFT_NEXT, Facing::Left) => Facing::Down,
+        (TURN_LEFT_NEXT, Facing::Up) => Facing::Left,
+        (GO_STRAIGHT_NEXT, facing) => facing,
+        (TURN_RIGHT_NEXT, Facing::Right) => Facing::Down,
+        (TURN_RIGHT_NEXT, Facing::Down) => Facing::Left,
+        (TURN_RIGHT_NEXT, Facing::Left) => Facing::Up,
+        (TURN_RIGHT_NEXT, Facing::Up) => Facing::Right,
+        (_, _) => panic!("Nope, shouldn't happen"),
+     }
 }
 
 fn step_trains(grid: &Vec<Vec<char>>, trains: &mut Vec<Train>) -> Result<(), String> {
@@ -127,7 +132,10 @@ fn step_trains(grid: &Vec<Vec<char>>, trains: &mut Vec<Train>) -> Result<(), Str
             ('\\', Facing::Up) => train.facing = Facing::Left,
             ('\\', Facing::Down) => train.facing = Facing::Right,
 
-            ('+', _) => panic!("TODO: Junction at {}, {}", train.x, train.y),
+            ('+', f) => {
+                train.facing = new_facing(f, train.step);
+                train.step = (train.step + 1) % 3;
+            }
 
             (c, _) => {
                 panic!("Unexpected state: {:?} on {}", train, c);
@@ -151,7 +159,7 @@ fn main() {
     print_track(&grid);
     println!("{:?}", trains);
     loop {
-        step_trains(&grid, &mut trains);
+        step_trains(&grid, &mut trains).unwrap();
         println!("{:?}", trains);
     }
 }
