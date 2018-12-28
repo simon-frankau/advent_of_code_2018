@@ -2,8 +2,6 @@ const COUNT: usize = 580741;
 const DISPLAY: usize = 10;
 
 fn main() {
-    // This was more complicated than expected, as I thought I'd need
-    // to parse a more complicated string. Ooops.
     let mut v = vec![3, 7];
     let mut idx1 = 0;
     let mut idx2 = 1;
