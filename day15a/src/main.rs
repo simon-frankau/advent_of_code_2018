@@ -39,7 +39,7 @@ impl Square {
             '#' => Square::Wall,
             'E' => Square::Unit(Unit::new(Species::Elf)),
             'G' => Square::Unit(Unit::new(Species::Gnome)),
-            _  => panic!("Unknown character: {}", c),
+            _ => panic!("Unknown character: {}", c),
         }
     }
 
@@ -47,12 +47,10 @@ impl Square {
         match self {
             Square::Wall => '#',
             Square::Space => '.',
-            Square::Unit(u) => {
-                match u.species {
-                    Species::Elf => 'E',
-                    Species::Gnome => 'G',
-                }
-            }
+            Square::Unit(u) => match u.species {
+                Species::Elf => 'E',
+                Species::Gnome => 'G',
+            },
         }
     }
 }
@@ -83,14 +81,27 @@ impl Move {
         }
     }
 
-    fn neighbours(seen: &mut HashSet<(usize, usize)>, grid: &Vec<Vec<Square>>, x: usize, y: usize) -> Vec<(usize, usize, Move)> {
-       // Use the fact there's a perimeter on the map to prevent underflow.
-       let mut candidates = vec![(y-1, x, Move::Up), (y, x-1, Move::Left), (y, x+1, Move::Right), (y+1, x, Move::Down)];
-       let result = candidates.into_iter().filter(|(y, x, _)| grid[*y][*x] != Square::Wall && !seen.contains(&(*x,*y))).collect::<Vec<_>>();
-       for (y, x, _) in result.iter() {
-           seen.insert((*x, *y));
-       }
-       result
+    fn neighbours(
+        seen: &mut HashSet<(usize, usize)>,
+        grid: &Vec<Vec<Square>>,
+        x: usize,
+        y: usize,
+    ) -> Vec<(usize, usize, Move)> {
+        // Use the fact there's a perimeter on the map to prevent underflow.
+        let mut candidates = vec![
+            (y - 1, x, Move::Up),
+            (y, x - 1, Move::Left),
+            (y, x + 1, Move::Right),
+            (y + 1, x, Move::Down),
+        ];
+        let result = candidates
+            .into_iter()
+            .filter(|(y, x, _)| grid[*y][*x] != Square::Wall && !seen.contains(&(*x, *y)))
+            .collect::<Vec<_>>();
+        for (y, x, _) in result.iter() {
+            seen.insert((*x, *y));
+        }
+        result
     }
 
     fn find(grid: &Vec<Vec<Square>>, x: usize, y: usize) -> Option<Move> {
@@ -104,7 +115,10 @@ impl Move {
         let mut frontier = Move::neighbours(&mut seen, &grid, x, y);
         while !frontier.is_empty() {
             {
-                let mut targets = frontier.iter().filter(|(y, x, _)| Move::get_species(grid, *x, *y) == Some(target)).collect::<Vec<_>>();
+                let mut targets = frontier
+                    .iter()
+                    .filter(|(y, x, _)| Move::get_species(grid, *x, *y) == Some(target))
+                    .collect::<Vec<_>>();
                 if !targets.is_empty() {
                     // We can reach some target. We'll choose the one
                     // that's most top-left, and then tie break on most
@@ -142,5 +156,5 @@ fn main() {
 
     println!("{:?}", grid);
 
-    print_grid(& grid);
+    print_grid(&grid);
 }
