@@ -1,7 +1,8 @@
+use std::collections::HashSet;
 use std::io;
 use std::io::BufRead;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 enum Species {
     Elf,
     Gnome,
@@ -62,6 +63,67 @@ fn print_grid(grid: &Vec<Vec<Square>>) {
             print!("{}", col.disp());
         }
         println!("");
+    }
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
+enum Move {
+    Up,
+    Left,
+    Right,
+    Down,
+}
+
+impl Move {
+    fn get_species(grid: &Vec<Vec<Square>>, x: usize, y: usize) -> Option<Species> {
+        if let Square::Unit(ref u) = grid[y][x] {
+            Some(u.species)
+        } else {
+            None
+        }
+    }
+
+    fn neighbours(seen: &mut HashSet<(isize, isize)>, grid: &Vec<Vec<Square>>, x: usize, y: usize) -> Vec<(usize, usize, Move)> {
+        // TODO
+        Vec::new()
+    }
+
+    fn find(grid: &Vec<Vec<Square>>, x: usize, y: usize) -> Option<Move> {
+        let target = match Move::get_species(&grid, x, y).unwrap() {
+            Species::Gnome => Species::Elf,
+            Species::Elf => Species::Gnome,
+        };
+        // All squares we've already reached.
+        let mut seen = HashSet::new();
+        // All squares on the current distance frontier.
+        let mut frontier = Move::neighbours(&mut seen, &grid, x, y);
+        while !frontier.is_empty() {
+            {
+                let mut targets = frontier.iter().filter(|(y, x, _)| Move::get_species(grid, *x, *y) == Some(target)).collect::<Vec<_>>();
+                if !targets.is_empty() {
+                    // We can reach some target. We'll choose the one
+                    // that's most top-left, and then tie break on most
+                    // top-left starting movement direction.
+                    targets.sort();
+                    // Return the direction to move.
+                    return Some(targets[0].2);
+                }
+            }
+
+            // No target reachable at this distance. Build the set of
+            // points we can reach. As the initial list of neighbours
+            // was sorted, we'll always favour the top-left starting
+            // direction.
+            let mut new_frontier = Vec::new();
+            for (y, x, original_move) in frontier.iter() {
+                for (new_y, new_x, _) in Move::neighbours(&mut seen, &grid, *x, *y).iter() {
+                    new_frontier.push((*new_y, *new_x, *original_move));
+                }
+            }
+            // Is this O(1)? Who knows! I have much to learn about Rust.
+            std::mem::swap(&mut frontier, &mut new_frontier);
+        }
+        None
     }
 }
 
