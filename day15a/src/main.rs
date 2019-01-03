@@ -8,7 +8,7 @@ enum Species {
     Gnome,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 struct Unit {
     species: Species,
     attack: u32,
@@ -25,7 +25,7 @@ impl Unit {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 enum Square {
     Wall,
     Space,
@@ -64,7 +64,7 @@ fn print_grid(grid: &Vec<Vec<Square>>) {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
 enum Move {
     Up,
     Left,
@@ -88,7 +88,7 @@ impl Move {
         y: usize,
     ) -> Vec<(usize, usize, Move)> {
         // Use the fact there's a perimeter on the map to prevent underflow.
-        let mut candidates = vec![
+        let candidates = vec![
             (y - 1, x, Move::Up),
             (y, x - 1, Move::Left),
             (y, x + 1, Move::Right),
@@ -146,6 +146,47 @@ impl Move {
     }
 }
 
+// Run through the entire grid, moving pieces.
+fn move_all(grid: &mut Vec<Vec<Square>>) {
+    // As we're updating the grid as we go, don't move the units we've
+    // already moved, if we scan over them again.
+    let mut moved_already = HashSet::new();
+
+    for y in 0..grid.len() {
+        for x in 0..grid.len() {
+            if moved_already.contains(&(x, y)) {
+                continue;
+            }
+
+            if let Square::Unit(_) = grid[y][x] {
+                let new_loc = match Move::find(&grid, x, y) {
+                    Some(Move::Up) => Some((x, y - 1)),
+                    Some(Move::Left) => Some((x - 1, y)),
+                    Some(Move::Right) => Some((x + 1, y)),
+                    Some(Move::Down) => Some((x, y + 1)),
+                    None => None,
+                };
+                // "find" is willing to move onto the enemy. Don't do that.
+                let new_loc = if let Some((x, y)) = new_loc {
+                    if grid[y][x] == Square::Space {
+                        Some((x, y))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+                if let Some((new_x, new_y)) = new_loc {
+                    println!("{}, {} -> {}, {}", x, y, new_x, new_y);
+                    moved_already.insert((new_x, new_y));
+                    grid[new_y][new_x] = grid[y][x];
+                    grid[y][x] = Square::Space;
+                }
+            }
+        }
+    }
+}
+
 fn main() {
     let stdin = io::stdin();
     let mut grid: Vec<Vec<Square>> = stdin
@@ -154,7 +195,9 @@ fn main() {
         .map(|s| s.unwrap().chars().map(Square::from).collect())
         .collect();
 
-    println!("{:?}", grid);
-
     print_grid(&grid);
+    for i in 0..5 {
+        move_all(&mut grid);
+        print_grid(&grid);
+    }
 }
