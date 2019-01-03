@@ -8,7 +8,7 @@ enum Species {
     Gnome,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct Unit {
     species: Species,
     attack: u32,
@@ -25,7 +25,7 @@ impl Unit {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum Square {
     Wall,
     Space,
@@ -83,9 +83,14 @@ impl Move {
         }
     }
 
-    fn neighbours(seen: &mut HashSet<(isize, isize)>, grid: &Vec<Vec<Square>>, x: usize, y: usize) -> Vec<(usize, usize, Move)> {
-        // TODO
-        Vec::new()
+    fn neighbours(seen: &mut HashSet<(usize, usize)>, grid: &Vec<Vec<Square>>, x: usize, y: usize) -> Vec<(usize, usize, Move)> {
+       // Use the fact there's a perimeter on the map to prevent underflow.
+       let mut candidates = vec![(y-1, x, Move::Up), (y, x-1, Move::Left), (y, x+1, Move::Right), (y+1, x, Move::Down)];
+       let result = candidates.into_iter().filter(|(y, x, _)| grid[*y][*x] != Square::Wall && !seen.contains(&(*x,*y))).collect::<Vec<_>>();
+       for (y, x, _) in result.iter() {
+           seen.insert((*x, *y));
+       }
+       result
     }
 
     fn find(grid: &Vec<Vec<Square>>, x: usize, y: usize) -> Option<Move> {
