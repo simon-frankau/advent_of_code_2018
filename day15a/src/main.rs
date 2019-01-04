@@ -81,9 +81,23 @@ impl Move {
         }
     }
 
+    // We try to move *onto* the enemy, and then decide to never do
+    // that final move later. I *think* it would be equivalent to just
+    // find the top-left-est square next to an enemy, but I'm not sure if
+    // there's nasty corner case bugs or not, so I'm avoiding that
+    // optimisation.
+    fn can_move_to(square: &Square, target: Species) -> bool {
+        match square {
+            Square::Wall => false,
+            Square::Space => true,
+            Square::Unit(u) => u.species == target,
+        }
+    }
+
     fn neighbours(
         seen: &mut HashSet<(usize, usize)>,
         grid: &Vec<Vec<Square>>,
+        target: Species,
         x: usize,
         y: usize,
     ) -> Vec<(usize, usize, Move)> {
@@ -96,8 +110,9 @@ impl Move {
         ];
         let result = candidates
             .into_iter()
-            .filter(|(y, x, _)| grid[*y][*x] != Square::Wall && !seen.contains(&(*x, *y)))
-            .collect::<Vec<_>>();
+            .filter(|(y, x, _)| {
+                Move::can_move_to(&grid[*y][*x], target) && !seen.contains(&(*x, *y))
+            }).collect::<Vec<_>>();
         for (y, x, _) in result.iter() {
             seen.insert((*x, *y));
         }
@@ -105,6 +120,7 @@ impl Move {
     }
 
     fn find(grid: &Vec<Vec<Square>>, x: usize, y: usize) -> Option<Move> {
+        // println!("Finding target for {} {}", x, y);
         let target = match Move::get_species(&grid, x, y).unwrap() {
             Species::Gnome => Species::Elf,
             Species::Elf => Species::Gnome,
@@ -112,14 +128,16 @@ impl Move {
         // All squares we've already reached.
         let mut seen = HashSet::new();
         // All squares on the current distance frontier.
-        let mut frontier = Move::neighbours(&mut seen, &grid, x, y);
+        let mut frontier = Move::neighbours(&mut seen, &grid, target, x, y);
         while !frontier.is_empty() {
+            // println!("Frontier: {:?}", frontier);
             {
                 let mut targets = frontier
                     .iter()
                     .filter(|(y, x, _)| Move::get_species(grid, *x, *y) == Some(target))
                     .collect::<Vec<_>>();
                 if !targets.is_empty() {
+                    // println!("Targets: {:?}", targets);
                     // We can reach some target. We'll choose the one
                     // that's most top-left, and then tie break on most
                     // top-left starting movement direction.
@@ -135,7 +153,7 @@ impl Move {
             // direction.
             let mut new_frontier = Vec::new();
             for (y, x, original_move) in frontier.iter() {
-                for (new_y, new_x, _) in Move::neighbours(&mut seen, &grid, *x, *y).iter() {
+                for (new_y, new_x, _) in Move::neighbours(&mut seen, &grid, target, *x, *y).iter() {
                     new_frontier.push((*new_y, *new_x, *original_move));
                 }
             }
@@ -177,7 +195,7 @@ fn move_all(grid: &mut Vec<Vec<Square>>) {
                     None
                 };
                 if let Some((new_x, new_y)) = new_loc {
-                    println!("{}, {} -> {}, {}", x, y, new_x, new_y);
+                    // println!("{}, {} -> {}, {}", x, y, new_x, new_y);
                     moved_already.insert((new_x, new_y));
                     grid[new_y][new_x] = grid[y][x];
                     grid[y][x] = Square::Space;
