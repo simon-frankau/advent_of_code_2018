@@ -273,6 +273,35 @@ fn update_all(grid: &mut Vec<Vec<Square>>) {
     }
 }
 
+fn is_complete(grid: &Vec<Vec<Square>>) -> bool {
+    let mut elves = 0;
+    let mut gnomes = 0;
+    for row in grid.iter() {
+        for col in row.iter() {
+            if let Square::Unit(u) = col {
+                if u.species == Species::Elf {
+                    elves += 1;
+                } else {
+                    gnomes +=1 ;
+                }
+            }
+        }
+    }
+    elves == 0 || gnomes == 0
+}
+
+fn sum_hp(grid: &Vec<Vec<Square>>) -> usize {
+    let mut hp = 0;
+    for row in grid.iter() {
+        for col in row.iter() {
+            if let Square::Unit(u) = col {
+                hp += u.hp;
+            }
+        }
+    }
+    hp as usize
+}
+
 fn main() {
     let stdin = io::stdin();
     let mut grid: Vec<Vec<Square>> = stdin
@@ -283,10 +312,15 @@ fn main() {
 
     print_grid(&grid);
     print_units(&grid);
-    for i in 1..50 {
-        println!("Round {}", i);
+    let mut round = 0;
+    while !is_complete(&grid) {
+        round += 1;
+        println!("\nRound {}", round);
         update_all(&mut grid);
         print_grid(&grid);
         print_units(&grid);
     }
+    let hp = sum_hp(&grid);
+    // For all the examples but the first, it seems the round count is one less??
+    println!("{} * {} = {}", round - 1, hp, (round - 1) * hp);
 }
