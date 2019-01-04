@@ -64,6 +64,16 @@ fn print_grid(grid: &Vec<Vec<Square>>) {
     }
 }
 
+fn print_units(grid: &Vec<Vec<Square>>) {
+    for row in grid.iter() {
+        for col in row.iter() {
+            if let Square::Unit(u) = col {
+                println!("{:?}: {}", u.species, u.hp);
+            }
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
 enum Move {
     Up,
@@ -164,42 +174,100 @@ impl Move {
     }
 }
 
-// Run through the entire grid, moving pieces.
-fn move_all(grid: &mut Vec<Vec<Square>>) {
+// Moves a unit and returns its new location
+fn move_unit(grid: &mut Vec<Vec<Square>>, x: usize, y: usize) -> (usize, usize) {
+    let new_loc = match Move::find(&grid, x, y) {
+        Some(Move::Up) => Some((x, y - 1)),
+        Some(Move::Left) => Some((x - 1, y)),
+        Some(Move::Right) => Some((x + 1, y)),
+        Some(Move::Down) => Some((x, y + 1)),
+        None => None,
+    };
+    // "find" is willing to move onto the enemy. Don't do that.
+    let new_loc = if let Some((x, y)) = new_loc {
+        if grid[y][x] == Square::Space {
+            Some((x, y))
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+    if let Some((new_x, new_y)) = new_loc {
+        // println!("{}, {} -> {}, {}", x, y, new_x, new_y);
+        grid[new_y][new_x] = grid[y][x];
+        grid[y][x] = Square::Space;
+        return (new_x, new_y);
+    }
+    return (x, y);
+}
+
+// Performs combat.
+fn attack_with_unit(grid: &mut Vec<Vec<Square>>, x: usize, y: usize) {
+    let target = match Move::get_species(&grid, x, y).unwrap() {
+        Species::Gnome => Species::Elf,
+        Species::Elf => Species::Gnome,
+    };
+
+    let candidates = vec![
+        (y - 1, x),
+        (y, x - 1),
+        (y, x + 1),
+        (y + 1, x),
+    ];
+
+    let mut targets = candidates
+        .iter()
+        .map(|(y, x)| (grid[*y][*x], *y, *x))
+        .filter(|(sq, _, _)| if let Square::Unit(u) = sq {
+            u.species == target
+        } else {
+            false
+        })
+        .collect::<Vec<_>>();
+    // Sort is stable, so if HPs match we use position
+    targets.sort_by(|(a, _, _), (b, _, _)| if let (Square::Unit(au), Square::Unit(bu)) = (a, b) {
+        au.hp.cmp(&bu.hp)
+    } else {
+        panic!("Not a unit?!")
+    });
+    // println!("Targets: {:?}", targets);
+
+    // If there's a target, let's attack!
+    if let Some((_, ty, tx)) = targets.iter().next() {
+        let target = &mut grid[*ty][*tx];
+        // println!("We have a target: {:?}", target);
+
+        // Not sure how to update through a reference, so make a copy
+        // of the struct and then copy it back...
+        if let Square::Unit(mut u) = target {
+            // Cheat: Rather than look up our AP, reduce by AP of target.
+            if u.hp <= u.attack {
+                 *target = Square::Space;
+            } else {
+                 u.hp -= u.attack;
+                 *target = Square::Unit(u);
+            }
+        }
+    }
+}
+
+// Run through the entire grid, moving pieces and doing combat.
+fn update_all(grid: &mut Vec<Vec<Square>>) {
     // As we're updating the grid as we go, don't move the units we've
     // already moved, if we scan over them again.
     let mut moved_already = HashSet::new();
 
     for y in 0..grid.len() {
-        for x in 0..grid.len() {
+        for x in 0..grid[y].len() {
             if moved_already.contains(&(x, y)) {
                 continue;
             }
 
             if let Square::Unit(_) = grid[y][x] {
-                let new_loc = match Move::find(&grid, x, y) {
-                    Some(Move::Up) => Some((x, y - 1)),
-                    Some(Move::Left) => Some((x - 1, y)),
-                    Some(Move::Right) => Some((x + 1, y)),
-                    Some(Move::Down) => Some((x, y + 1)),
-                    None => None,
-                };
-                // "find" is willing to move onto the enemy. Don't do that.
-                let new_loc = if let Some((x, y)) = new_loc {
-                    if grid[y][x] == Square::Space {
-                        Some((x, y))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                };
-                if let Some((new_x, new_y)) = new_loc {
-                    // println!("{}, {} -> {}, {}", x, y, new_x, new_y);
-                    moved_already.insert((new_x, new_y));
-                    grid[new_y][new_x] = grid[y][x];
-                    grid[y][x] = Square::Space;
-                }
+                let (x, y) = move_unit(grid, x, y);
+                moved_already.insert((x, y));
+                attack_with_unit(grid, x, y);
             }
         }
     }
@@ -214,8 +282,11 @@ fn main() {
         .collect();
 
     print_grid(&grid);
-    for i in 0..5 {
-        move_all(&mut grid);
+    print_units(&grid);
+    for i in 1..50 {
+        println!("Round {}", i);
+        update_all(&mut grid);
         print_grid(&grid);
+        print_units(&grid);
     }
 }
