@@ -194,6 +194,21 @@ impl Reservoir {
     fn count_water(&self) -> usize {
         self.grid.iter().map(Reservoir::count_water_row).sum()
     }
+
+    fn count_settled_water_row(row: &Vec<Square>) -> usize {
+        row.iter().map(|x| if *x == Square::Still {
+                1
+            } else {
+                0
+            })
+            .sum()
+    }
+
+    fn count_settled_water(&self) -> usize {
+        self.grid.iter().map(Reservoir::count_settled_water_row).sum()
+    }
+
+
 }
 
 fn main() {
@@ -211,5 +226,5 @@ fn main() {
     let min_y = reservoir.min_y;
     reservoir.pour(START_X, min_y);
     reservoir.print();
-    println!("{}", reservoir.count_water());
+    println!("{} {}", reservoir.count_water(), reservoir.count_settled_water());
 }
