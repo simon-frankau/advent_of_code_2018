@@ -1,5 +1,5 @@
 [package]
-name = "day17a"
+name = "day17"
 version = "0.1.0"
 authors = ["Simon Frankau <sgf@arbitrary.name>"]
 
