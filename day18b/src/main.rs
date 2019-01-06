@@ -3,6 +3,9 @@ use std::io;
 use std::io::BufRead;
 use std::iter::once;
 
+const TARGET_CYCLES: u32 = 1000000000;
+const SKIP_CYCLES: u32 = 1000;
+
 fn print_grid(grid: &VecDeque<Vec<char>>) {
     for row in grid.iter() {
         for c in row.iter() {
@@ -103,11 +106,28 @@ fn main() {
     grid.push_front(vec!['.'; row_len]);
     grid.push_back(vec!['.'; row_len]);
 
-    print_grid(&grid);
-    for _ in 0..10 {
+    // Step over initial steps to when we're pretty sure we've
+    // converged (easier than a rho algorithm).
+    for _ in 0..SKIP_CYCLES {
         grid = step(&grid);
-        println!("");
-        print_grid(&grid);
     }
+
+    // Then find the number of steps to cycle...
+    let base_grid = grid.clone();
+    let mut cycle_length = 0;
+    loop {
+        grid = step(&grid);
+        cycle_length += 1;
+        if grid == base_grid {
+            break;
+        }
+    }
+    println!("Cycle length is {}", cycle_length);
+    let steps = (TARGET_CYCLES - SKIP_CYCLES) % cycle_length;
+    println!("Need to step forward {} steps", steps);
+    for _ in 0..steps {
+        grid = step(&grid);
+    }
+
     score(&grid);
 }
