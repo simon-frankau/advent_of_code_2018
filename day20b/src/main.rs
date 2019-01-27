@@ -311,8 +311,17 @@ fn main() {
     println!("{}\n", longest_matches[0].len());
 */
 
+    let res = opt_empties(opt_backtracks(opt_regexp(res)));
     let distro = find_length_distribution(&res);
-    let mut counts = distro.iter().collect::<Vec<_>>();
+    let mut counts = distro.iter().map(|(x, y)| (*x, *y)).collect::<Vec<(usize, usize)>>();
     counts.sort();
     println!("{:?}\n", counts);
+
+    let mut total: u64 = 0;
+    for (k, v) in counts.iter() {
+        // if *k >= 1000 {
+            total += *v as u64;
+        // }
+    }
+    println!("{}\n", total);
 }
