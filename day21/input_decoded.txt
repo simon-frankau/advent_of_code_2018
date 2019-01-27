@@ -32,3 +32,43 @@ blah:   eqrr 4 0 3              ; r3 = r0 == r4
         seti 5 1 pc             ; jmp qux
 end:
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Converting to pseudocode...
+;;
+
+;; Initialisation code.
+        seti 123 0 4            ; r4 = 123
+top:    bani 4 456 4            ; r4 &= 456
+        if r4 != 72 {
+            jmp top
+        }
+        seti 0 1 4              ; r4 = 0
+
+qux:    bori 4 65536 1          ; r1 = r4 | 65536
+        seti 16031208 7 4       ; r4 = 16031208
+
+bar:    bani 1 255 3            ; r3 = r1 & 255
+        addr 4 3 4              ; r4 += r3
+        bani 4 16777215 4       ; r4 &= 16777215
+        muli 4 65899 4          ; r4 *= 65899
+        bani 4 16777215 4       ; r4 &= 16777215
+        if r1 < 256 {
+            jmp blah
+        }
+        seti 0 9 3              ; r3 = 0
+
+baz:    addi 3 1 5              ; r5 = r3 + 1
+        muli 5 256 5            ; r5 *= 256
+        gtrr 5 1 5              ; r5 = r5 > r1
+        if r5 > r1 {
+            jmp foo
+        }
+        addi 3 1 3              ; r3 += 1
+        seti 17 4 pc            ; jmp baz
+
+foo:    setr 3 1 1              ; r1 = r3
+        seti 7 5 pc             ; jmp bar
+
+blah:   if r0 != r4 {
+            jmp qux
+        }
