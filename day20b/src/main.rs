@@ -1,16 +1,9 @@
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::io;
 use std::io::Read;
 use std::iter::Peekable;
 use std::slice::Iter;
-
-// We can construct a DAG to represent the movements given, and then
-// follow all the possible paths as a breadth-first search, tracking
-// locations and remaining regexp. Drop the cases that visit existing
-// nodes taking more time than necessary.
-
-// I had a false start here, assuming the problem was the rather
-// simpler "find the longest match for the regexp" problem.
 
 #[derive(Clone)]
 enum Match {
@@ -264,22 +257,49 @@ fn add_cross_string(lhs: &mut HashSet<String>, rhs: &HashSet<String>) {
     lhs.extend(res.into_iter());
 }
 
-// Count the number of distinct prefixes greater than or equal to given length.
-fn all_longer_than(length: usize, strs: &HashSet<String>) -> usize {
+// Generate all the incremental paths
+fn all_prefixes(strs: &HashSet<String>) -> HashSet<String> {
     let mut seen = HashSet::new();
     for str in strs.iter() {
-        for l in length..str.len() + 1 {
-            seen.insert(str.get(0..l).unwrap());
+        for l in 0..str.len() {
+            seen.insert(str.get(0..l+1).unwrap().to_string());
         }
     }
-/*
-    {
-        let mut v = seen.iter().collect::<Vec<_>>();
-        v.sort();
-        println!("{:?}\n", v);
+    seen
+}
+
+// Given a path, generate the coordinates of its end point.
+fn get_coords(s: &str) -> (i32, i32) {
+    let y = s.chars().map(|c| match c {
+        'N' => 1,
+        'S' => -1,
+        _ => 0,
+    }).sum();
+    let x = s.chars().map(|c| match c {
+        'E' => 1,
+        'W' => -1,
+        _ => 0,
+    }).sum();
+    (x, y)
+}
+
+// Build a mapping from coord to shortest route there.
+fn build_mapping(strs: &HashSet<String>) -> HashMap<(i32, i32), usize> {
+    let mut map = HashMap::new();
+    for s in strs.iter() {
+        let xy = get_coords(s);
+        let l = s.len();
+        let e = map.entry(xy).or_insert(1000000);
+        if l < *e {
+            *e = l;
+        }
     }
-*/
-    seen.len()
+    map
+}
+
+// Count the long routes
+fn count_long(l: usize, mapping: &HashMap<(i32, i32), usize>) -> usize {
+    mapping.iter().filter(|(_, l2)| **l2 >= l).count()
 }
 
 fn main() {
@@ -287,29 +307,42 @@ fn main() {
     io::stdin().read_to_string(&mut buffer).expect("Read error");
     let chars = buffer.replace('^', "").replace('$', "").trim().chars().collect::<Vec<_>>();
 
-    println!("{:?}\n", chars);
+    // println!("{:?}\n", chars);
     let res =  parse_regexp(&mut chars.iter().peekable());
-    println!("{:?}\n", res);
+    // println!("{:?}\n", res);
 
     // All the backtracks form a trivial pattern, so we'll extract all
     // the routes up to a backtrack (plus original route).
     let mut partials = get_partials(&res);
     partials.push(res);
-    println!("{:?}\n", partials);
+    // println!("{:?}\n", partials);
 
     // Then we'll eliminate the back-tracks, etc.
     let partials = partials.into_iter().map(|x| opt_empties(opt_backtracks(opt_regexp(x)))).collect::<Vec<_>>();
-    println!("{:?}\n", partials);
+    // println!("{:?}\n", partials);
     println!("{}\n", partials.len());
 
     // And now build the regexp of doom.
     let regex = Match::Alternation(partials);
 
     let all = generate_all(&regex);
-
-    println!("{:?}\n", all);
+    // println!("{:?}\n", all);
     println!("{}\n", all.len());
-    println!("{}\n", all_longer_than(1000, &all));
-}
 
-// 8402 (current count) is too high, 7546 (bug missing some strings) is too low.
+    // We have all the paths, now generate all the partial paths.
+    let prefixes = all_prefixes(&all);
+    println!("{}\n", prefixes.len());
+
+    // Some paths will overlap, so for each coordinate, find the shortest path there.
+    let mapping = build_mapping(&prefixes);
+    println!("{}\n", mapping.len());
+
+    // And find the count of coordinates over length 1000.
+    println!("{}\n", count_long(1000, &mapping));
+
+    // My, that was really, really tedious.
+
+    // If I'd known you could just generate all of the paths in
+    // sensible time once you'd taken out the obvious
+    // backtracking... *sigh*.
+}

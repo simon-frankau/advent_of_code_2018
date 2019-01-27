@@ -3,14 +3,6 @@ use std::io::Read;
 use std::iter::Peekable;
 use std::slice::Iter;
 
-// We can construct a DAG to represent the movements given, and then
-// follow all the possible paths as a breadth-first search, tracking
-// locations and remaining regexp. Drop the cases that visit existing
-// nodes taking more time than necessary.
-
-// I had a false start here, assuming the problem was the rather
-// simpler "find the longest match for the regexp" problem.
-
 #[derive(Clone)]
 enum Match {
    Literal(char),
