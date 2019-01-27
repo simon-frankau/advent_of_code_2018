@@ -11,6 +11,7 @@ use std::slice::Iter;
 // I had a false start here, assuming the problem was the rather
 // simpler "find the longest match for the regexp" problem.
 
+#[derive(Clone)]
 enum Match {
    Literal(char),
    Alternation(Vec<Match>),
@@ -76,6 +77,10 @@ fn parse_regexp(iter: &mut Peekable<Iter<char>>) -> Match {
     Match::Alternation(alternatives)
 }
 
+////////////////////////////////////////////////////////////////////////
+// This is the bit for problem 20a...
+//
+
 // This just cleans up the regexp tree, without understanding paths.
 fn opt_regexp(m: Match) -> Match {
     match m {
@@ -101,7 +106,8 @@ fn opt_regexp(m: Match) -> Match {
     }
 }
 
-// This removes obvious, basic back-tracking.
+// This removes obvious, basic back-tracking (back-tracking that
+// occurs only within a single concatenation of literals).
 fn opt_backtracks(m: Match) -> Match {
     match m {
         Match::Alternation(xs) => {
@@ -159,6 +165,60 @@ fn opt_empties(m: Match) -> Match {
     }
 }
 
+////////////////////////////////////////////////////////////////////////
+// Problem 20b part
+//
+
+// Find the route to the turning point for a sequence of literals
+fn get_literal_partial(xs: &[Match]) -> Option<Vec<Match>> {
+    if xs.len() == 0 {
+        return None;
+    }
+    for elem in xs.iter().zip(xs.iter().rev()) {
+        match elem {
+            (Match::Literal('N'), Match::Literal('S')) => (),
+            (Match::Literal('S'), Match::Literal('N')) => (),
+            (Match::Literal('W'), Match::Literal('E')) => (),
+            (Match::Literal('E'), Match::Literal('W')) => (),
+            _ => return None,
+        }
+    }
+    Some(xs.iter().take(xs.len() / 2).map(|x| (*x).clone()).collect())
+}
+
+// Given a route that involves back-tracks, generate a list of routes
+// up to the turning-around point. e.g. NEWS -> NE.
+fn get_partials(m: &Match) -> Vec<Match> {
+    match m {
+        Match::Alternation(xs) => {
+            let mut res = Vec::new();
+            for alternative in xs.iter() {
+                res.extend(get_partials(alternative).into_iter());
+            }
+            res
+        }
+        // A single literal will have no backtrackable parts.
+        Match::Literal(_) => Vec::new(),
+        Match::Concatenation(xs) => {
+            match get_literal_partial(xs) {
+                Some(x) => vec![Match::Concatenation(x)],
+                None => {
+                    let mut res = Vec::new();
+                    for i in 0..xs.len() {
+                        let partials = get_partials(&xs[i]);
+                        for partial in partials.into_iter() {
+                            let mut element = xs.iter().take(i).map(|x| (*x).clone()).collect::<Vec<Match>>();
+                            element.push(partial);
+                            res.push(Match::Concatenation(element));
+                        }
+                    }
+                    res
+                }
+            }
+        }
+    }
+}
+
 // Find the longest match for a Match
 fn find_longest_match(m: &Match) -> String {
     match m {
@@ -184,31 +244,22 @@ fn main() {
     println!("{:?}\n", chars);
     let res =  parse_regexp(&mut chars.iter().peekable());
     println!("{:?}\n", res);
-    let res = opt_regexp(res);
-    println!("{:?}\n", res);
-    let res = opt_backtracks(res);
-    println!("{:?}\n", res);
-    let res = opt_empties(res);
-    println!("{:?}\n", res);
-    let res = find_longest_match(&res);
-    println!("{}", res);
-    if ["NS", "SN", "WE", "EW"].iter().map(|x| res.contains(x)).any(|x| x) {
-        println!("Longest solution contains backtrack. :/")
-    }
-    println!("{}", res.len());
+
+    // All the backtracks form a trivial pattern, so we'll extract all
+    // the routes up to a backtrack (plus original route).
+    let mut partials = get_partials(&res);
+    partials.push(res);
+    println!("{:?}\n", partials);
+
+    // Then we'll eliminate the back-tracks, etc.
+    let partials = partials.into_iter().map(|x| opt_empties(opt_backtracks(opt_regexp(x)))).collect::<Vec<_>>();
+    println!("{:?}\n", partials);
+    println!("{}\n", partials.len());
+
+    // And find the longest. Not so many that sorting rather than just
+    // finding the max is too bad.
+    let mut longest_matches = partials.iter().map(find_longest_match).collect::<Vec<_>>();
+    longest_matches.sort_by_key(|s| -(s.len() as isize));
+    println!("{:?}\n", longest_matches);
+    println!("{}\n", longest_matches[0].len());
 }
-
-// Ugh, got bored trying to guess the algorithm's intention, and
-// instead did a greedy long route, eliminated backtracks, and then found
-// the longest route: Also got 3929 - too low.
-
-// Turns out to be 3930, including a bit at the end for further
-// distance that then gets back-tracked, and shouldn't be removed.
-//
-
-// My algorithm removes backtracks from regexp first, then finds
-// route, but this doesn't seem to be necessary this way round, by
-// construction of the problem?! So backtracking outside an alternation
-// doesn't seem to be a thing? Generally, there seems to be some assumptions
-// baked into the input that makes this thing doable greedily, rather than
-// require exponential time or whatever. Ugh. Horrible question.
