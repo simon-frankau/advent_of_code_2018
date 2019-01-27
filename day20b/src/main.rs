@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::io;
 use std::io::Read;
 use std::iter::Peekable;
@@ -220,67 +221,48 @@ fn get_partials(m: &Match) -> Vec<Match> {
     }
 }
 
-
 ////////////////////////////////////////////////////////////////////////
-// Find the distribution of lengths for the match
-fn find_length_distribution(m: &Match) -> HashMap<usize, usize> {
-    let mut res = HashMap::new();
+// Generate all the possible strings.
+//
+
+fn generate_all(m: &Match) -> HashSet<String> {
+    let mut res: HashSet<String> = HashSet::new();
     match m {
-        Match::Literal(_) => {
-            res.insert(1, 1);
+        Match::Literal(x) => {
+            res.insert(x.to_string());
             ()
         }
         Match::Alternation(xs) => {
             for x in xs.iter() {
-                for (key, value) in find_length_distribution(x).iter() {
-                    let entry = res.entry(*key).or_insert(0);
-                    *entry += value;
-                }
+                res.extend(generate_all(x).into_iter());
             }
         }
         Match::Concatenation(xs) => {
             // Ugh. Cross products are potentially expensive.
-            res.insert(0, 1);
+            res.insert(String::new());
             for x in xs.iter() {
-                let to_cross = find_length_distribution(x);
-                add_cross(&mut res, &to_cross);
+                let to_cross = generate_all(x);
+                add_cross_string(&mut res, &to_cross);
             }
         }
     }
     res
 }
 
-fn add_cross(lhs: &mut HashMap<usize, usize>, rhs: &HashMap<usize, usize>) {
-    let mut res = HashMap::new();
+fn add_cross_string(lhs: &mut HashSet<String>, rhs: &HashSet<String>) {
+    let mut res = HashSet::new();
 
-    for (kx, vx) in lhs.iter() {
-        for (ky, vy) in rhs.iter() {
-            let key = kx + ky;
-            let value = vx * vy;
-            *(res.entry(key).or_insert(0)) += value;
+    for s1 in lhs.iter() {
+        for s2 in rhs.iter() {
+            let mut s = s1.clone();
+            s.push_str(&s2);
+            res.insert(s);
         }
     }
 
     // This is where I'd like to swap lhs and res.
     lhs.clear();
     lhs.extend(res.into_iter());
-}
-
-// Find the longest match for a Match
-fn find_longest_match(m: &Match) -> String {
-    match m {
-        Match::Literal(c) => std::iter::once(c).collect(),
-        Match::Concatenation(xs) => {
-            let mut s = String::new();
-            for x in xs.iter() {
-                s.push_str(&find_longest_match(x));
-            }
-            s
-        }
-       Match::Alternation(xs) => {
-           xs.iter().map(find_longest_match).max_by_key(String::len).unwrap()
-       }
-    }
 }
 
 fn main() {
@@ -312,11 +294,13 @@ fn main() {
 */
 
     let res = opt_empties(opt_backtracks(opt_regexp(res)));
-    let distro = find_length_distribution(&res);
-    let mut counts = distro.iter().map(|(x, y)| (*x, *y)).collect::<Vec<(usize, usize)>>();
-    counts.sort();
-    println!("{:?}\n", counts);
+    let all = generate_all(&res);
+    // let mut counts = distro.iter().map(|(x, y)| (*x, *y)).collect::<Vec<(usize, usize)>>();
+    // counts.sort();
 
+    println!("{:?}\n", all);
+    println!("{}\n", all.len());
+/*
     let mut total: u64 = 0;
     for (k, v) in counts.iter() {
         // if *k >= 1000 {
@@ -324,4 +308,5 @@ fn main() {
         // }
     }
     println!("{}\n", total);
+*/
 }
