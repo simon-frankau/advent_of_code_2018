@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::collections::HashSet;
 use std::io;
 use std::io::Read;
@@ -265,6 +264,24 @@ fn add_cross_string(lhs: &mut HashSet<String>, rhs: &HashSet<String>) {
     lhs.extend(res.into_iter());
 }
 
+// Count the number of distinct prefixes greater than or equal to given length.
+fn all_longer_than(length: usize, strs: &HashSet<String>) -> usize {
+    let mut seen = HashSet::new();
+    for str in strs.iter() {
+        for l in length..str.len() + 1 {
+            seen.insert(str.get(0..l).unwrap());
+        }
+    }
+/*
+    {
+        let mut v = seen.iter().collect::<Vec<_>>();
+        v.sort();
+        println!("{:?}\n", v);
+    }
+*/
+    seen.len()
+}
+
 fn main() {
     let mut buffer = String::new();
     io::stdin().read_to_string(&mut buffer).expect("Read error");
@@ -273,7 +290,7 @@ fn main() {
     println!("{:?}\n", chars);
     let res =  parse_regexp(&mut chars.iter().peekable());
     println!("{:?}\n", res);
-/*
+
     // All the backtracks form a trivial pattern, so we'll extract all
     // the routes up to a backtrack (plus original route).
     let mut partials = get_partials(&res);
@@ -285,28 +302,14 @@ fn main() {
     println!("{:?}\n", partials);
     println!("{}\n", partials.len());
 
-    // And find the longest. Not so many that sorting rather than just
-    // finding the max is too bad.
-    let mut longest_matches = partials.iter().map(find_longest_match).collect::<Vec<_>>();
-    longest_matches.sort_by_key(|s| -(s.len() as isize));
-    println!("{:?}\n", longest_matches);
-    println!("{}\n", longest_matches[0].len());
-*/
+    // And now build the regexp of doom.
+    let regex = Match::Alternation(partials);
 
-    let res = opt_empties(opt_backtracks(opt_regexp(res)));
-    let all = generate_all(&res);
-    // let mut counts = distro.iter().map(|(x, y)| (*x, *y)).collect::<Vec<(usize, usize)>>();
-    // counts.sort();
+    let all = generate_all(&regex);
 
     println!("{:?}\n", all);
     println!("{}\n", all.len());
-/*
-    let mut total: u64 = 0;
-    for (k, v) in counts.iter() {
-        // if *k >= 1000 {
-            total += *v as u64;
-        // }
-    }
-    println!("{}\n", total);
-*/
+    println!("{}\n", all_longer_than(1000, &all));
 }
+
+// 8402 (current count) is too high, 7546 (bug missing some strings) is too low.
