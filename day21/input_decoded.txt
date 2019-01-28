@@ -47,10 +47,26 @@ end:
             r1 = r4 | 0x010000;
             r4 = 0xF49DE8;
 
-            for (; r1 >= 256; r1 >>= 8) {
+            for (; r1 >= 0; r1 >>= 8) {
                 r4 += r1 & 0xff;
                 r4 &= 0xffffff;
                 r4 *= 0x01016B;
                 r4 &= 0xffffff;
             }
         } while (r0 != r4);
+
+Inner loop, start 1:
+    r1 = 0x010000;
+    r4 = 16031208;
+
+Next loop:
+    r1 = 0x000100;
+    r4 = 12838904;
+
+Next loop:
+    r1 = 0x000001;
+    r4 = 12709032;
+
+Next loop:
+    r1 = 0x000000;
+    r4 = 10720163;
