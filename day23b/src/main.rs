@@ -44,7 +44,8 @@ fn read_nanobot(str: &str) -> Nanobot {
 // 4. Stop when best cuboid has a score worse than your optimal score.
 
 // Min and max values are inclusive for the bounding box.
-#[derive(Debug)]
+// Arbirary "Ord" implementation to allow use in a BinaryHeap.
+#[derive(Debug, Ord, Eq, PartialOrd, PartialEq)]
 struct BoundingBox {
   min_x: i64,
   max_x: i64,
@@ -64,6 +65,15 @@ impl BoundingBox {
 
     fn is_unit_box(self: &BoundingBox) -> bool {
         self.min_x == self.max_x && self.min_y == self.max_y && self.min_z == self.max_z
+    }
+
+    fn score(self: &BoundingBox, nanobots: &[Nanobot]) -> usize {
+        nanobots.iter().filter(|x| self.intersects(x)).count()
+    }
+
+    fn subdivide(self: &BoundingBox) -> Vec<BoundingBox> {
+        // TODO
+        panic!("Nope!");
     }
 }
 
@@ -90,10 +100,30 @@ struct State {
     // Score is combination for number of overlapping nanobots (LHS)
     // and negated distance from origin (RHS). Lexicographically higher
     // is better.
-    best_score: (i64, i64),
+    best_score: (usize, i64),
     // Heap ordered by best-case number of possible overlaps with the
     // bounding box.
-    candidates: BinaryHeap<(i64, BoundingBox)>,
+    candidates: BinaryHeap<(usize, BoundingBox)>,
+}
+
+impl State {
+    fn process_candidate(self: &mut State, nanobots: &[Nanobot], candidate: (usize, BoundingBox)) {
+        let (score, bb) = candidate;
+        if bb.is_unit_box() {
+            let origin_dist = 0 - bb.min_x.abs() - bb.min_y.abs() - bb.min_z.abs();
+            // Can't subdivide any further. Update score if needed.
+            let new_score = (score, origin_dist);
+            self.best_score = self.best_score.min(new_score);
+        } else {
+            for new_bb in bb.subdivide().into_iter() {
+                let new_score = bb.score(nanobots);
+                // Only queue it up if it's a plausible candidate
+                if new_score >= self.best_score.0 {
+                    self.candidates.push((new_score, new_bb));
+                }
+            }
+        }
+    }
 }
 
 fn main() {
@@ -105,5 +135,5 @@ fn main() {
         .collect();
 
     let bb = get_bounding_box(&nanobots);
-    println!("{:?} {}", bb, nanobots.iter().filter(|x| bb.intersects(x)).count());
+    println!("{:?} {}", bb, bb.score(&nanobots));
 }
