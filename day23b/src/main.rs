@@ -2,7 +2,7 @@ use std::collections::BinaryHeap;
 use std::io;
 use std::io::BufRead;
 
-const SPLIT_FACTOR: i64 = 5;
+const SPLIT_FACTOR: i64 = 10;
 
 // Representation of rectangle with lower bound included, upper bound
 // excluded.
@@ -12,12 +12,6 @@ struct Nanobot {
     x: i64,
     y: i64,
     z: i64
-}
-
-impl Nanobot {
-    fn in_range_of(&self, n: &Nanobot) -> bool {
-        (n.x - self.x).abs() + (n.y - self.y).abs() + (n.z - self.z).abs() <= self.r
-    }
 }
 
 fn read_nanobot(str: &str) -> Nanobot {
@@ -91,6 +85,13 @@ impl BoundingBox {
         }
         return res;
     }
+
+    fn diameter(self: &BoundingBox) -> i64 {
+        let x_ext = self.max_x - self.min_x + 1;
+        let y_ext = self.max_y - self.min_y + 1;
+        let z_ext = self.max_z - self.min_z + 1;
+        x_ext.max(y_ext.max(z_ext))
+    }
 }
 
 // Find the distance from val to the given range.
@@ -152,7 +153,7 @@ impl State {
             let origin_dist = 0 - bb.min_x.abs() - bb.min_y.abs() - bb.min_z.abs();
             // Can't subdivide any further. Update score if needed.
             let new_score = (score, origin_dist);
-            self.best_score = self.best_score.min(new_score);
+            self.best_score = self.best_score.max(new_score);
         } else {
             for new_bb in bb.subdivide().into_iter() {
                 let new_score = new_bb.score(nanobots);
@@ -162,6 +163,24 @@ impl State {
                 }
             }
         }
+    }
+
+    fn run(self: &mut State, nanobots: &[Nanobot]) -> i64 {
+        loop {
+            match self.candidates.pop() {
+                // Nothing left? We're done!
+                None => break,
+                Some(candidate) => {
+                    println!("{:?} {:?} {:?}", self.best_score, candidate.1.diameter(), candidate);
+                    // Can't do any better? We're done.
+                    if candidate.0 < self.best_score.0 {
+                        break;
+                    }
+                    self.process_candidate(nanobots, candidate);
+                }
+            }
+        }
+        return -self.best_score.1;
     }
 }
 
@@ -177,9 +196,5 @@ fn main() {
     println!("{:?} {}", bb, bb.score(&nanobots));
 
     let mut state = State::new(&bb);
-    let candidate = state.candidates.pop().unwrap();
-    state.process_candidate(&nanobots, candidate);
-    for candidate in state.candidates.iter() {
-        println!("{:?}", candidate);
-    }
+    println!("{}", state.run(&nanobots));
 }
