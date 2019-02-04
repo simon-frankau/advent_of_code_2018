@@ -1,0 +1,4 @@
+Immune,17,5390,weak radiation bludgeoning,4507,fire,2
+Immune,989,1274,immune fire weak bludgeoning slashing,25,slashing,3
+Infection,801,4706,weak radiation,116,bludgeoning,1
+Infection,4485,2961,immune radiation weak fire cold,12,slashing,4
