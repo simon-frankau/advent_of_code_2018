@@ -1,0 +1,20 @@
+Immune,504,1697,weak fire immune slashing,28,fire,4
+Immune,7779,6919,weak bludgeoning,7,cold,2
+Immune,7193,13214,weak cold fire,12,slashing,14
+Immune,1898,3721,weak bludgeoning,16,cold,20
+Immune,843,3657,immune slashing,41,cold,17
+Immune,8433,3737,immune radiation weak bludgeoning,3,bludgeoning,8
+Immune,416,3760,immune fire radiation,64,radiation,3
+Immune,5654,1858,weak fire,2,cold,6
+Immune,2050,8329,immune radiation cold,36,radiation,12
+Immune,4130,3560,,8,bludgeoning,13
+Infection,442,35928,,149,bludgeoning,11
+Infection,61,42443,immune radiation,1289,slashing,7
+Infection,833,6874,weak slashing,14,bludgeoning,15
+Infection,1832,61645,,49,fire,9
+Infection,487,26212,weak fire,107,bludgeoning,16
+Infection,2537,18290,immune cold slashing fire,11,fire,19
+Infection,141,14369,immune bludgeoning,178,radiation,5
+Infection,3570,34371,,18,radiation,10
+Infection,5513,60180,weak radiation fire,16,slashing,1
+Infection,2378,20731,weak bludgeoning,17,radiation,18

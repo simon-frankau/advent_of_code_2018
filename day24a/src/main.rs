@@ -40,6 +40,7 @@ fn read_immune_weak(str: &str) -> (HashSet<String>, HashSet<String>) {
     let mut current = 0;
     for part in str.split(' ') {
         match part {
+            "" => (),
             "weak" => current = 1,
             "immune" => current = 2,
             _ => {
