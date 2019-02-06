@@ -104,7 +104,9 @@ fn select_targets(groups: &[Group]) -> HashMap<usize, usize> {
 
     // Targets that have been chosen already, and can't be re-selected.
     let mut chosen: HashSet<usize> = HashSet::new();
+    // Mapping from attacker id to target id (if there is one).
     let mut mapping = HashMap::new();
+
     for attacker in group_refs.iter() {
         if attacker.unit_count == 0 {
             // Dead groups don't attack.
@@ -118,6 +120,11 @@ fn select_targets(groups: &[Group]) -> HashMap<usize, usize> {
             .filter(|target| target.side != attacker.side && target.unit_count != 0 && !chosen.contains(&target.id))
             .max_by_key(|target| attacker.attack_multiplier(target));
         if let Some(target) = opt_target {
+            // Hang on, if the best we can do is nothing, don't bother.
+            if attacker.attack_multiplier(target) == 0 {
+                continue;
+            }
+
             let target_id = target.id;
             chosen.insert(target_id);
             mapping.insert(attacker.id, target_id);
@@ -182,3 +189,4 @@ fn main() {
     println!("{}", groups.iter().map(|group| group.unit_count).sum::<u64>());
 }
 // 15327 is too low.
+// 15591 is too low.
