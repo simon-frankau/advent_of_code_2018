@@ -103,7 +103,7 @@ fn select_targets(groups: &[Group]) -> HashMap<usize, usize> {
     group_refs.sort_by_key(power_rank);
 
     // Targets that have been chosen already, and can't be re-selected.
-    let mut chosen: HashSet<usize> = HashSet::new();
+    let mut chosen = HashSet::new();
     // Mapping from attacker id to target id (if there is one).
     let mut mapping = HashMap::new();
 
@@ -135,22 +135,22 @@ fn select_targets(groups: &[Group]) -> HashMap<usize, usize> {
 
 fn perform_attacks(groups: &mut [Group], targets: &HashMap<usize, usize>) {
     // Sort groups by initiative.
-    let mut group_ids = (0..groups.len()).collect::<Vec<usize>>();
-    group_ids.sort_by_key(|group_id| -(groups[*group_id].initiative as i64));
+    let mut attacker_ids = (0..groups.len()).collect::<Vec<usize>>();
+    attacker_ids.sort_by_key(|group_id| -(groups[*group_id].initiative as i64));
 
-    for group_id in group_ids.iter() {
+    for attacker_id in attacker_ids.iter() {
         // To work around the borrow-checker, we will work in two
         // phases: Decide the attack to make, then apply it.
         let (target_id, damage) = {
-            let group = &groups[*group_id];
+            let attacker = &groups[*attacker_id];
             // Dead groups don't attack.
-            if group.unit_count == 0 {
+            if attacker.unit_count == 0 {
                 continue;
             }
             // Only do something if we have a target.
-            if let Some(target_id) = targets.get(&group.id) {
-                let damage = group.unit_count * group.attack_damage * group.attack_multiplier(&groups[*target_id]);
-                println!("{} would attack {} for {}", group.id, target_id, damage);
+            if let Some(target_id) = targets.get(&attacker.id) {
+                let damage = attacker.unit_count * attacker.attack_damage * attacker.attack_multiplier(&groups[*target_id]);
+                println!("{} would attack {} for {}", attacker.id, target_id, damage);
                 (target_id, damage)
             } else {
                 continue;
