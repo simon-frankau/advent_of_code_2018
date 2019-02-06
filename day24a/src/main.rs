@@ -24,7 +24,7 @@ impl FromStr for Side {
 
 #[derive(Debug)]
 struct Group {
-    id: u64,
+    id: usize,
     side: Side,
     unit_count: u64,
     hit_points: u64,
@@ -36,7 +36,7 @@ struct Group {
 }
 
 impl Group {
-    fn attack_multiplier(self: &Group, target: &Group) -> i64 {
+    fn attack_multiplier(self: &Group, target: &Group) -> u64 {
         let t = &self.attack_type;
         if target.immune_modifiers.contains(t) {
             0
@@ -73,7 +73,7 @@ fn read_immune_weak(str: &str) -> (HashSet<String>, HashSet<String>) {
     return (immunes, weaks);
 }
 
-fn read_group(str: &str, id: u64) -> Group {
+fn read_group(str: &str, id: usize) -> Group {
     // Normalise the separators, and split up.
     let parts = str.split(',').collect::<Vec<_>>();
         // .map(|s| s.trim().parse::<i32>().expect("Parse error"))
@@ -97,31 +97,65 @@ fn power_rank(group: &&Group) -> i64 {
     0 - (group.unit_count * group.attack_damage * 100 + group.initiative) as i64
 }
 
-fn select_targets(groups: &[Group]) -> HashMap<u64, Option<u64>> {
+fn select_targets(groups: &[Group]) -> HashMap<usize, usize> {
     // Sort groups by effective power
     let mut group_refs = groups.iter().collect::<Vec<&Group>>();
     group_refs.sort_by_key(power_rank);
 
     // Targets that have been chosen already, and can't be re-selected.
-    let mut chosen: HashSet<u64> = HashSet::new();
-    group_refs.iter().map(|attacker| {
+    let mut chosen: HashSet<usize> = HashSet::new();
+    let mut mapping = HashMap::new();
+    for attacker in group_refs.iter() {
+        if attacker.unit_count == 0 {
+            // Dead groups don't attack.
+            continue;
+        }
+
         // Use rev so that we get the highest effective power in a
         // draw (max_by_key returns the last of equals)
-        let target = groups.iter()
+        let opt_target = groups.iter()
             .rev()
             .filter(|target| target.side != attacker.side && target.unit_count != 0 && !chosen.contains(&target.id))
             .max_by_key(|target| attacker.attack_multiplier(target));
-        let target_id = match target {
-            Some(some_target) => {
-                chosen.insert(some_target.id);
-                Some(some_target.id)
-            }
-            None => None
-        };
-        (attacker.id, target_id)
-    }).collect()
+        if let Some(target) = opt_target {
+            let target_id = target.id;
+            chosen.insert(target_id);
+            mapping.insert(attacker.id, target_id);
+        }
+    }
+    mapping
 }
 
+fn perform_attacks(groups: &mut [Group], targets: &HashMap<usize, usize>) {
+    // Sort groups by initiative.
+    let mut group_ids = (0..groups.len()).collect::<Vec<usize>>();
+    group_ids.sort_by_key(|group_id| -(groups[*group_id].initiative as i64));
+
+    for group_id in group_ids.iter() {
+        // To work around the borrow-checker, we will work in two
+        // phases: Decide the attack to make, then apply it.
+        let (target_id, damage) = {
+            let group = &groups[*group_id];
+            // Dead groups don't attack.
+            if group.unit_count == 0 {
+                continue;
+            }
+            // Only do something if we have a target.
+            if let Some(target_id) = targets.get(&group.id) {
+                let damage = group.unit_count * group.attack_damage * group.attack_multiplier(&groups[*target_id]);
+                println!("{} would attack {} for {}", group.id, target_id, damage);
+                (target_id, damage)
+            } else {
+                continue;
+            }
+        };
+
+        let target = &mut groups[*target_id];
+        let kill_count = damage / target.hit_points;
+        println!("{} attacked for {}, killing {}", target_id, damage, kill_count);
+        target.unit_count -= kill_count.min(target.unit_count);
+    }
+}
 
 fn main() {
     let stdin = io::stdin();
@@ -132,9 +166,19 @@ fn main() {
         .map(|(s, i)| read_group(&s.expect("Read error"), i))
         .collect();
 
-    println!("{:?}", select_targets(&mut groups));
+    loop {
+        for group in groups.iter() {
+            println!("{:?}", group);
+        }
 
-    for group in groups.iter() {
-        println!("{:?}", group);
+        let targets = select_targets(&groups);
+        println!("{:?}", targets);
+        if targets.is_empty() {
+            break;
+        }
+        perform_attacks(&mut groups, &targets);
     }
+
+    println!("{}", groups.iter().map(|group| group.unit_count).sum::<u64>());
 }
+// 15327 is too low.
