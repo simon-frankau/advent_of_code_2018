@@ -153,7 +153,6 @@ fn perform_attacks(groups: &mut [Group], targets: &HashMap<usize, usize>) -> boo
             // Only do something if we have a target.
             if let Some(target_id) = targets.get(&attacker.id) {
                 let damage = attacker.unit_count * attacker.attack_damage * attacker.attack_multiplier(&groups[*target_id]);
-                // println!("{} would attack {} for {}", attacker.id, target_id, damage);
                 (target_id, damage)
             } else {
                 continue;
@@ -163,7 +162,6 @@ fn perform_attacks(groups: &mut [Group], targets: &HashMap<usize, usize>) -> boo
         let target = &mut groups[*target_id];
         let kill_count = damage / target.hit_points;
         if kill_count > 0 {
-            // println!("{} attacked for {}, killing {}", target_id, damage, kill_count);
             target.unit_count -= kill_count.min(target.unit_count);
             something_happened = true;
         }
@@ -183,11 +181,6 @@ fn find_winner(groups: &[Group], boost: u64) -> (Side, u64) {
         .collect::<Vec<_>>();
 
     loop {
-/*
-        for group in boosted_groups.iter() {
-            println!("{:?}", group);
-        }
-*/
         let targets = select_targets(&boosted_groups);
         if targets.is_empty() {
             break;
@@ -227,12 +220,6 @@ fn main() {
         upper_bound *= 2;
     }
 
-/*
-    for i in lower_bound..upper_bound {
-        println!("{} {:?}", i, find_winner(&groups, i));
-    }
-*/
-
     // And then binary search the "insertion point"
     while lower_bound != upper_bound {
         let probe = (lower_bound + upper_bound) / 2;
@@ -243,5 +230,5 @@ fn main() {
         }
     }
 
-    println!("{} {:?}", lower_bound, find_winner(&groups, lower_bound));
+    println!("{}", find_winner(&groups, lower_bound).1);
 }
