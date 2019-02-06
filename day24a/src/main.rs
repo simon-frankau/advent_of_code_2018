@@ -115,7 +115,7 @@ fn select_targets(groups: &[Group]) -> HashMap<usize, usize> {
 
         // Use rev so that we get the highest effective power in a
         // draw (max_by_key returns the last of equals)
-        let opt_target = groups.iter()
+        let opt_target = group_refs.iter()
             .rev()
             .filter(|target| target.side != attacker.side && target.unit_count != 0 && !chosen.contains(&target.id))
             .max_by_key(|target| attacker.attack_multiplier(target));
@@ -188,5 +188,3 @@ fn main() {
 
     println!("{}", groups.iter().map(|group| group.unit_count).sum::<u64>());
 }
-// 15327 is too low.
-// 15591 is too low.
