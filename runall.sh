@@ -35,3 +35,11 @@ cargo run --bin day18b < day18a/input/input.txt
 cargo run --bin day19 < day19/input/input.txt
 cargo run --bin day20a < day20a/input/input.txt
 cargo run --bin day20b < day20a/input/input.txt
+cargo run --bin day21 < day21/input/input.txt
+cargo run --bin day22a
+cargo run --bin day22b
+cargo run --bin day23a < day23a/input/input.txt
+cargo run --bin day23b < day23a/input/input.txt
+cargo run --bin day24a < day24a/input/input_expanded.txt
+cargo run --bin day24b < day24a/input/input_expanded.txt
+cargo run --bin day25a < day25a/input/input.txt
