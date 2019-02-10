@@ -1,4 +1,72 @@
 [[package]]
+name = "day01a"
+version = "0.1.0"
+
+[[package]]
+name = "day01b"
+version = "0.1.0"
+
+[[package]]
+name = "day02a"
+version = "0.1.0"
+
+[[package]]
+name = "day02b"
+version = "0.1.0"
+
+[[package]]
+name = "day03a"
+version = "0.1.0"
+
+[[package]]
+name = "day03b"
+version = "0.1.0"
+
+[[package]]
+name = "day04a"
+version = "0.1.0"
+
+[[package]]
+name = "day04b"
+version = "0.1.0"
+
+[[package]]
+name = "day05a"
+version = "0.1.0"
+
+[[package]]
+name = "day05b"
+version = "0.1.0"
+
+[[package]]
+name = "day06a"
+version = "0.1.0"
+
+[[package]]
+name = "day06b"
+version = "0.1.0"
+
+[[package]]
+name = "day07a"
+version = "0.1.0"
+
+[[package]]
+name = "day07b"
+version = "0.1.0"
+
+[[package]]
+name = "day08a"
+version = "0.1.0"
+
+[[package]]
+name = "day08b"
+version = "0.1.0"
+
+[[package]]
+name = "day09"
+version = "0.1.0"
+
+[[package]]
 name = "day10"
 version = "0.1.0"
 
@@ -67,14 +135,6 @@ name = "day19"
 version = "0.1.0"
 
 [[package]]
-name = "day1a"
-version = "0.1.0"
-
-[[package]]
-name = "day1b"
-version = "0.1.0"
-
-[[package]]
 name = "day20a"
 version = "0.1.0"
 
@@ -112,65 +172,5 @@ version = "0.1.0"
 
 [[package]]
 name = "day25a"
-version = "0.1.0"
-
-[[package]]
-name = "day2a"
-version = "0.1.0"
-
-[[package]]
-name = "day2b"
-version = "0.1.0"
-
-[[package]]
-name = "day3a"
-version = "0.1.0"
-
-[[package]]
-name = "day3b"
-version = "0.1.0"
-
-[[package]]
-name = "day4a"
-version = "0.1.0"
-
-[[package]]
-name = "day4b"
-version = "0.1.0"
-
-[[package]]
-name = "day5a"
-version = "0.1.0"
-
-[[package]]
-name = "day5b"
-version = "0.1.0"
-
-[[package]]
-name = "day6a"
-version = "0.1.0"
-
-[[package]]
-name = "day6b"
-version = "0.1.0"
-
-[[package]]
-name = "day7a"
-version = "0.1.0"
-
-[[package]]
-name = "day7b"
-version = "0.1.0"
-
-[[package]]
-name = "day8a"
-version = "0.1.0"
-
-[[package]]
-name = "day8b"
-version = "0.1.0"
-
-[[package]]
-name = "day9"
 version = "0.1.0"
 

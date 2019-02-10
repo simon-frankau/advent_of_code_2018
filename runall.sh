@@ -1,21 +1,21 @@
 #!/bin/sh
-cargo run --bin day1a < day1a/input/input.txt
-cargo run --bin day1b < day1a/input/input.txt
-cargo run --bin day2a < day2a/input/input.txt
-cargo run --bin day2b < day2a/input/input.txt
-cargo run --bin day3a < day3a/input/input.txt
-cargo run --bin day3b < day3a/input/input.txt
-cargo run --bin day4a < day4a/input/input.txt
-cargo run --bin day4b < day4a/input/input.txt
-cargo run --bin day5a < day5a/input/input.txt
-cargo run --bin day5b < day5a/input/input.txt
-cargo run --bin day6a < day6a/input/input.txt
-cargo run --bin day6b < day6a/input/input.txt
-cargo run --bin day7a < day7a/input/input.txt
-cargo run --bin day7b < day7a/input/input.txt
-cargo run --bin day8a < day8a/input/input.txt
-cargo run --bin day8b < day8a/input/input.txt
-cargo run --bin day9
+cargo run --bin day01a < day01a/input/input.txt
+cargo run --bin day01b < day01a/input/input.txt
+cargo run --bin day02a < day02a/input/input.txt
+cargo run --bin day02b < day02a/input/input.txt
+cargo run --bin day03a < day03a/input/input.txt
+cargo run --bin day03b < day03a/input/input.txt
+cargo run --bin day04a < day04a/input/input.txt
+cargo run --bin day04b < day04a/input/input.txt
+cargo run --bin day05a < day05a/input/input.txt
+cargo run --bin day05b < day05a/input/input.txt
+cargo run --bin day06a < day06a/input/input.txt
+cargo run --bin day06b < day06a/input/input.txt
+cargo run --bin day07a < day07a/input/input.txt
+cargo run --bin day07b < day07a/input/input.txt
+cargo run --bin day08a < day08a/input/input.txt
+cargo run --bin day08b < day08a/input/input.txt
+cargo run --bin day09
 cargo run --bin day10 < day10/input/input.txt
 cargo run --bin day11a
 cargo run --bin day11b
